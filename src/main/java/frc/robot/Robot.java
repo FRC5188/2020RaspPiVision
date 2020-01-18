@@ -11,6 +11,12 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import java.util.List;
+
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -23,16 +29,24 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
-
+  private NetworkTableInstance inst;
+  private NetworkTable table;
+  private NetworkTableEntry xEntry;
+  private NetworkTableEntry yEntry;
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
    */
   @Override
   public void robotInit() {
+    System.out.println("init");
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+    this.inst = NetworkTableInstance.getDefault();
+    this.table = inst.getTable("SmartDashboard");
+    this.xEntry = table.getEntry("tape-x");
+    this.yEntry = table.getEntry("tape-y");
   }
 
   /**
@@ -86,6 +100,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
+    System.out.println(xEntry.getValue().getValue());
+    System.out.println(yEntry.getValue().getValue());
   }
 
   /**
