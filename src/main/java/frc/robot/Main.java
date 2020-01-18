@@ -8,6 +8,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.controller.PIDController;
 
 /**
  * Do NOT add any static variables to this class, or any initialization at all.
@@ -24,6 +25,17 @@ public final class Main {
    * <p>If you change your main robot class, change the parameter type.
    */
   public static void main(String... args) {
+    /*
+    PIDController contr = new PIDController(0.5, 0.0, 0.0);
+    double x = 0.1;
+    
+    contr.setSetpoint(0);
+    for(int i = 0; i < 100; i++) {
+      double dx = contr.calculate(x);
+      System.out.println(x + " " +dx);
+      x += dx;
+    }
+    */
     RobotBase.startRobot(Robot::new);
   }
 }

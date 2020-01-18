@@ -461,7 +461,7 @@ if __name__ == "__main__":
             table.putNumber("hexagon-stats/height",math.sqrt(((points[0][0]+points[-1][0])/2-(points[1][0]+points[-2][0])/2)**2+((points[0][1]+points[-1][1])/2-(points[1][1]+points[-2][1])/2)**2))
             for i in range(len(points)-1):
                 cv2.line(mask, points[i], points[i+1], 255, 3)
-            
+            mask[int(avgY)][int(avgX)] = 255
             #if(maxDX2 == maxX or maxDX2 == minX):
             #print((maxDX, maxDY), (lastPointX, lastPointY), (maxDX3, maxDY3), (maxDX2, maxDY2), (maxX, maxXY), (minX, minXY))
             #cv2.line(mask, (lastPointX, lastPointY), (maxDX, maxDY), 255, 3)

@@ -7,9 +7,15 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import java.util.List;
 
@@ -25,14 +31,19 @@ import edu.wpi.first.networktables.NetworkTableInstance;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private NetworkTableInstance inst;
   private NetworkTable table;
   private NetworkTableEntry xEntry;
   private NetworkTableEntry yEntry;
+  private PIDController contr;
+
+  private TalonSRX leftMotor1;
+  private TalonSRX leftMotor2;
+  
+  private TalonSRX rightMotor1;
+  private VictorSPX rightMotor2;
+
+  private XboxController controller;
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
@@ -40,13 +51,19 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     System.out.println("init");
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
     this.inst = NetworkTableInstance.getDefault();
     this.table = inst.getTable("SmartDashboard");
     this.xEntry = table.getEntry("tape-x");
     this.yEntry = table.getEntry("tape-y");
+    contr = new PIDController(0.05, 0, 0.02);
+    contr.setSetpoint(0.0);
+    leftMotor1 = new TalonSRX(0);
+    leftMotor2 = new TalonSRX(1);
+    rightMotor1 = new TalonSRX(2);
+    rightMotor2 = new VictorSPX(3);
+    leftMotor2.follow(leftMotor1);
+    rightMotor2.follow(rightMotor1);
+    controller = new XboxController(0);
   }
 
   /**
@@ -74,9 +91,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
   }
 
   /**
@@ -84,15 +98,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
   }
 
   /**
@@ -100,8 +105,19 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
-    System.out.println(xEntry.getValue().getValue());
-    System.out.println(yEntry.getValue().getValue());
+    if(xEntry.getValue().getDouble() < 0) {
+      return;
+    }
+    double x = (xEntry.getValue().getDouble()-160.0)/16.0;
+    double motorPower = -Math.max(-1.0, Math.min(1.0, contr.calculate(x)));
+    System.out.println(motorPower);
+    leftMotor1.set(ControlMode.PercentOutput, motorPower*1.5);
+    rightMotor1.set(ControlMode.PercentOutput, motorPower);
+    /*double motorPower = controller.getRawAxis(1);
+    System.out.println(motorPower);
+    leftMotor1.set(ControlMode.PercentOutput, motorPower);
+    rightMotor1.set(ControlMode.PercentOutput, motorPower);*/
+    
   }
 
   /**
