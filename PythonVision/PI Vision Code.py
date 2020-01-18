@@ -306,61 +306,22 @@ if __name__ == "__main__":
                         maxY = y
                     if(y < minY):
                         minY = y
-                        
-                    '''
-                    if(x < minX):
-                        try:
-                            if(mask[y][x+1] == 255):
-                                minX = x
-                                minXY = [y]
-                        except:
-                            pass
-                    elif(x == minX):
-                        minXY.append(y)
-                    if(x > maxX):
-                        try:
-                            if(mask[y][x-1] == 255):
-                                maxX = x
-                                maxXY = [y]
-                        except:
-                            pass
-                    elif(x == maxX):
-                        maxXY.append(y)
-                        
-                    if(y < minY):
-                        try:
-                            if(mask[y+1][x] == 255):
-                                minY = y
-                                minYX = [x]
-                        except:
-                            pass
-                    elif(y == minY):
-                        minYX.append(x)
-                    if(y > maxY):
-                        try:
-                            if(mask[y-1][x] == 255):
-                                maxY = y
-                                maxYX = [x]
-                        except:
-                            pass
-                    elif(y == maxY):
-                        maxYX.append(x)
-                    '''
-        if(amt > 0): #  and len(maxYX) > 0 and len(maxXY) > 0 and len(minYX) > 0 and len(maxYX) > 0
+        if(amt > 0 and minX != maxX and minY != maxY): #  and len(maxYX) > 0 and len(maxXY) > 0 and len(minYX) > 0 and len(maxYX) > 0
             mask[int(totY/amt)][int(totX/amt)] = 0
             table.putNumber("tape-x", totX/amt)
             table.putNumber("tape-y", totY/amt)
+            
             amt1 = 0
             avgX = int(totX/amt)
             avgY = int(totY/amt)
-            
+            '''
             A = minXY-maxXY
             B = maxX-minX
             C = -minXY*maxX+minX*maxXY-minXY*maxX+maxX*minXY
             denom = math.sqrt(A**2+B**2)
             leftRightDist = math.sqrt((minX-maxX)**2+(minXY-maxXY)**2)
-            maxD = 0.4325*leftRightDist
-            minD = 0.3816*leftRightDist
+            maxD = 0.44*leftRightDist
+            minD = 0.37*leftRightDist
             #print(maxD, minD)
             bottomSeen = False
             bottomLeftX = 0
@@ -372,85 +333,129 @@ if __name__ == "__main__":
             topLeftY = 0
             topRightX = 0
             topRightY = 0
+            lastSeenYBot = 0
+            lastSeenYTop = 0
+            finished = False
             for x in range(minX, maxX+1): #len(mask.shape[1])):
                 maskAmtBottom = 0
                 maskAmtTop = 0
-                lastSeenYBot = 0
-                lastSeenYTop = 0
                 for y in range(minY, maxY+1):
                     if(mask[y][x]):
                         # y = (y2-y1)/(x2-x1)*(x-x1)+y1
                         # (y-y1)*(x2-x1)=(y2-y1)*(x-x1)
                         # y*x2-y1*x2+x1*y1-x1*y=y2*x-y1*x+y1*x2-x1*y2
                         # y*(x2-x1) x*(-y2+y1)  -y1*x2+x1*y2-y1*x2+x2*y1=0
+                        mask[y][x] = 0
+                        if(finished):
+                            continue
                         d = (A*x+B*y+C)/denom
                         #mask[y][x] = int(d*255/30.0)
                         if(d >= minD and d <= maxD):
-                            mask[y][x] = 0
                             maskAmtBottom += 1
+                            lastSeenYBot = y
                             if(maskAmtBottom > 3 and not bottomSeen):
                                 bottomSeen = True
                                 bottomLeftX = x
                                 bottomLeftY = y
                                 break
-                            lastSeenYBot = y
-                        else:
-                            mask[y][x] = 0
                 if(bottomSeen and maskAmtBottom < 3):
                     bottomRightX = x
                     bottomRightY = lastSeenYBot
                     bottomSeen = False
-                    
+                    finished = True
                             # 39.3in
                             # 17 in
-                        # 
-                        # 
-            
-            '''
-            stdDevX = 0
-            stdDevY = 0
-            for y in range(len(mask)):
-                for x in range(len(mask[y])):
-                    if(mask[y][x]):
-                        amt1 += 1
-                        stdDevX += (avgX-x)**2
-                        stdDevY += (avgY-y)**2
-                        if(amt1 >= amt):
-                            break
-            stdDevX = int(stdDevX / amt)
-            stdDevX = int(stdDevY / amt)
-            cv2.rectangle(mask, (avgX-stdDevX*2, avgY-stdDevY*2), (avgX+stdDevX*2, avgY+stdDevY*4), 255, 3)
-            '''
             #cv2.rectangle(mask, (0,0), (mask.shape[0], mask.shape[1]), 0, 10000)
+            if not (minX == 0 or maxX == hsv.shape[1]-1 or minXY == 0 or maxXY == hsv.shape[0]-1 or bottomLeftX == 0 or bottomRightX == hsv.shape[1]-1):
+                mask[maxXY][maxX] = 255
+                mask[minXY][minX] = 255
+                mask[bottomLeftY][bottomLeftX] = 255
+                mask[bottomRightY][bottomRightX] = 255
+                cv2.line(mask, (bottomLeftX, bottomLeftY), (minX, minXY), 255, 3)
+                cv2.line(mask, (bottomLeftX, bottomLeftY), (bottomRightX, bottomRightY), 255, 3)
+                cv2.line(mask, (bottomRightX, bottomRightY), (maxX, maxXY), 255, 3)
+            elif(minX == 0 and maxX < hsv.shape[0]):
+                pass# Turn left, the camera can't see the left side enough.
+            elif(minX > 0 and maxX == hsv.shape[1]):
+                pass# Turn right, the camera can't see the right side enough
+            '''
+            
+            A = minXY-maxXY
+            B = maxX-minX
+            C = -minXY*maxX+minX*maxXY
+            denom = math.sqrt(A**2+B**2)
+            maxD = 0
+            maxDX = 0
+            maxDY = 0
+            for x in range(minX, maxX+1):
+                for y in range(minY, maxY+1):
+                    if(mask[y][x]):
+                        d = (A*x+B*y+C)/denom
+                        #mask[y][x] = int(d*255/30.0)
+                        if(d > maxD):
+                            maxD = d
+                            maxDX = x
+                            maxDY = y
+            A1 = minXY-maxDY
+            B1 = maxDX-minX
+            C1 = -minXY*maxDX+minX*maxDY
+            denom1 = math.sqrt(A1**2+B1**2)
+            maxD2 = 0
+            maxDX2 = 0
+            maxDY2 = 0
+            A2 = maxDY-maxXY
+            B2 = maxX-maxDX
+            C2 = -maxDY*maxX+maxDX*maxXY
+            denom2 = math.sqrt(A2**2+B2**2)
+            maxD3 = 0
+            maxDX3 = 0
+            maxDY3 = 0
+            
+            for x in range(minX, maxX+1):
+                for y in range(minY, maxY+1):
+                    if(mask[y][x]):
+                        mask[y][x] = 0
+                        d1 = (A1*x+B1*y+C1)/denom1
+                        d2 = (A2*x+B2*y+C2)/denom2
+                        #mask[y][x] = int(d*255/30.0)
+                        if(d1 > maxD2):
+                            maxD2 = d1
+                            maxDX2 = x
+                            maxDY2 = y
+                        if(d2 > maxD3):
+                            maxD3 = d2
+                            maxDX3 = x
+                            maxDY3 = y
+            points = [(minX, minXY), (maxX, maxXY)]
+            def sortAddPoint(points, tup):
+                for i in range(len(points)):
+                    if(points[i][0] > tup[0]):
+                        break
+                points.insert(i, tup)
+            sortAddPoint(points, (maxDX, maxDY))
+            sortAddPoint(points, (maxDX2, maxDY2))
+            sortAddPoint(points, (maxDX3, maxDY3))
+            for i in range(len(points)-1):
+                cv2.line(mask, points[i], points[i+1], 255, 3)
+            #if(maxDX2 == maxX or maxDX2 == minX):
+            #print((maxDX, maxDY), (lastPointX, lastPointY), (maxDX3, maxDY3), (maxDX2, maxDY2), (maxX, maxXY), (minX, minXY))
+            #cv2.line(mask, (lastPointX, lastPointY), (maxDX, maxDY), 255, 3)
+            #if(lastPointX < maxDX):
+            #    cv2.line(mask, (lastPointX, lastPointY), (minX, minXY), 255, 3)
+            #    cv2.line(mask, (maxX, maxXY), (maxDX, maxDY), 255, 3)
+            #else:
+            #    cv2.line(mask, (maxDX, maxDY), (minX, minXY), 255, 3)
+            #    cv2.line(mask, (lastPointX, lastPointY), (maxX, maxXY), 255, 3)
+            '''
             mask[maxXY][maxX] = 255
             mask[minXY][minX] = 255
-            mask[bottomLeftY][bottomLeftX] = 255
-            mask[bottomRightY][bottomRightX] = 255
-            cv2.line(mask, (bottomLeftX, bottomLeftY), (minX, minXY), 255, 3)
-            cv2.line(mask, (bottomLeftX, bottomLeftY), (bottomRightX, bottomRightY), 255, 3)
-            cv2.line(mask, (bottomRightX, bottomRightY), (maxX, maxXY), 255, 3)
+            mask[maxDY][maxDX] = 255
+            mask[maxDY2][maxDX2] = 255
+            mask[maxDY3][maxDX3] = 255
             '''
-            minXY1 = minXY[0]
-            minXY2 = minXY[-1]
-            maxXY1 = maxXY[0]
-            maxXY2 = maxXY[-1]
-            if(len(minXY) > 1):
-                cv2.line(mask, (minX, minXY1), (minX, minXY2), 255, 3)
-            if(len(maxXY) > 1):
-                cv2.line(mask, (maxX, maxXY1), (maxX, maxXY2), 255, 3)
-            minYX1 = minYX[0]
-            minYX2 = minYX[-1]
-            maxYX1 = maxYX[0]
-            maxYX2 = maxYX[-1]
-            if(len(minYX) > 1):
-                cv2.line(mask, (minYX1, minY), (minYX2, minY), 255, 10)
-            if(len(maxYX) > 1):
-                cv2.line(mask, (maxYX1, maxY), (maxYX2, maxY), 255, 10)
-            cv2.line(mask, (minX, minXY1), (minYX1, minY), 255, 10)
-            cv2.line(mask, (minX, minXY2), (maxYX1, maxY), 255, 10)
-            cv2.line(mask, (maxX, maxXY1), (minYX2, minY), 255, 10)
-            cv2.line(mask, (maxX, maxXY2), (maxYX2, maxY), 255, 10)
-            '''
+            #cv2.line(mask, (lastPointX, ), (minX, minXY), 255, 3)
+            #cv2.line(mask, (bottomLeftX, bottomLeftY), (bottomRightX, bottomRightY), 255, 3)
+            #cv2.line(mask, (bottomRightX, bottomRightY), (maxX, maxXY), 255, 3)
         else:
             table.putNumber("tape-x", -1)
             table.putNumber("tape-y", -1)
