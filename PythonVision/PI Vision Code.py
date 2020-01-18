@@ -428,15 +428,40 @@ if __name__ == "__main__":
                             maxDY3 = y
             points = [(minX, minXY), (maxX, maxXY)]
             def sortAddPoint(points, tup):
+                if(tup == (0,0)):
+                    return
                 for i in range(len(points)):
                     if(points[i][0] > tup[0]):
                         break
                 points.insert(i, tup)
-            sortAddPoint(points, (maxDX, maxDY))
+                
             sortAddPoint(points, (maxDX2, maxDY2))
             sortAddPoint(points, (maxDX3, maxDY3))
+            sortAddPoint(points, (maxDX, maxDY))
+            minD = None
+            minDI = 1
+            for i in range(max(0, len(points)-2)):
+                ax = points[i][0]
+                ay = points[i][1]
+                bx = points[i+2][0]
+                by = points[i+2][1]
+                A = ay-by
+                B = bx-ax
+                C = -ay*bx+ax*by
+                denom = math.sqrt(A**2+B**2)
+                d = (A*points[i+1][0]+B*points[i+1][1]+C)/denom
+                if(minD == None or d < minD):
+                    minD = d
+                    minDI = i+1
+            points.remove(points[minDI])
+            for i in range(len(points)):
+                table.putNumber("hexagon-points/"+str(i)+"-x", points[i][0])
+                table.putNumber("hexagon-points/"+str(i)+"-y", points[i][1])
+            table.putNumber("hexagon-stats/"+str(i)+"-width", math.sqrt((points[0][0]-points[-1][0])**2+(points[0][1]-points[-1][1])**2)
+            table.putNumber("hexagon-stats/"+str(i)+"-height", math.sqrt(((points[0][0]+points[-1][0])/2-(points[1][0]+points[-2][0])/2)**2+((points[0][1]+points[-1][1])/2-(points[1][1]+points[-2][1])/2)**2)
             for i in range(len(points)-1):
                 cv2.line(mask, points[i], points[i+1], 255, 3)
+            
             #if(maxDX2 == maxX or maxDX2 == minX):
             #print((maxDX, maxDY), (lastPointX, lastPointY), (maxDX3, maxDY3), (maxDX2, maxDY2), (maxX, maxXY), (minX, minXY))
             #cv2.line(mask, (lastPointX, lastPointY), (maxDX, maxDY), 255, 3)
