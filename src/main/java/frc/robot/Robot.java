@@ -55,7 +55,8 @@ public class Robot extends TimedRobot {
     this.table = inst.getTable("SmartDashboard");
     this.xEntry = table.getEntry("tape-x");
     this.yEntry = table.getEntry("tape-y");
-    contr = new PIDController(0.05, 0, 0.02);
+    controller = new XboxController(0);
+    contr = new PIDController(0.05, 0.00, controller.getRawAxis(0)*0.1);
     contr.setSetpoint(0.0);
     leftMotor1 = new TalonSRX(0);
     leftMotor2 = new TalonSRX(1);
@@ -63,7 +64,6 @@ public class Robot extends TimedRobot {
     rightMotor2 = new VictorSPX(3);
     leftMotor2.follow(leftMotor1);
     rightMotor2.follow(rightMotor1);
-    controller = new XboxController(0);
   }
 
   /**
@@ -108,11 +108,18 @@ public class Robot extends TimedRobot {
     if(xEntry.getValue().getDouble() < 0) {
       return;
     }
+    // No good values found, but don't go over 0.1 for P
+    // D = sqrt(P)/2 ????
+    contr.setPID(0.07, 0.0, 0.49);
     double x = (xEntry.getValue().getDouble()-160.0)/16.0;
     double motorPower = -Math.max(-1.0, Math.min(1.0, contr.calculate(x)));
-    System.out.println(motorPower);
+    //if(Math.abs(motorPower) > 0.01) {
+    //  motorPower = motorPower > 0 ? motorPower+0.1 : motorPower - 0.1;
+    //}
+    //System.out.println(motorPower);
     leftMotor1.set(ControlMode.PercentOutput, motorPower*1.5);
     rightMotor1.set(ControlMode.PercentOutput, motorPower);
+    System.out.println(motorPower);
     /*double motorPower = controller.getRawAxis(1);
     System.out.println(motorPower);
     leftMotor1.set(ControlMode.PercentOutput, motorPower);
