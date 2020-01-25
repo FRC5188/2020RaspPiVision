@@ -35,6 +35,9 @@ public class Robot extends TimedRobot {
   private NetworkTable table;
   private NetworkTableEntry xEntry;
   private NetworkTableEntry yEntry;
+  private NetworkTableEntry pidP;
+  private NetworkTableEntry pidI;
+  private NetworkTableEntry pidD;
   private PIDController contr;
 
   private TalonSRX leftMotor1;
@@ -50,18 +53,23 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    System.out.println("init");
     this.inst = NetworkTableInstance.getDefault();
     this.table = inst.getTable("SmartDashboard");
     this.xEntry = table.getEntry("tape-x");
     this.yEntry = table.getEntry("tape-y");
+    this.pidP = table.getEntry("pid/p");
+    this.pidI = table.getEntry("pid/i");
+    this.pidD = table.getEntry("pid/d");
+    this.pidP.setDouble(0.05);
+    this.pidI.setDouble(0.00);
+    this.pidD.setDouble(0.00);
     contr = new PIDController(0.05, 0, 0.02);
     contr.setSetpoint(0.0);
     leftMotor1 = new TalonSRX(0);
     leftMotor2 = new TalonSRX(1);
     rightMotor1 = new TalonSRX(2);
     rightMotor2 = new VictorSPX(3);
-    leftMotor2.follow(leftMotor1);
+    //leftMotor2.follow(leftMotor1);
     rightMotor2.follow(rightMotor1);
     controller = new XboxController(0);
   }
@@ -105,19 +113,22 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
+    
     if(xEntry.getValue().getDouble() < 0) {
       return;
     }
-    double x = (xEntry.getValue().getDouble()-160.0)/16.0;
-    double motorPower = -Math.max(-1.0, Math.min(1.0, contr.calculate(x)));
-    System.out.println(motorPower);
-    leftMotor1.set(ControlMode.PercentOutput, motorPower*1.5);
+    contr.setPID(this.pidP.getValue().getDouble(), this.pidI.getValue().getDouble(), this.pidD.getValue().getDouble());
+    double x = (xEntry.getValue().getDouble()-160.0);
+    double motorPower = contr.calculate(x);
+    leftMotor1.set(ControlMode.PercentOutput, motorPower);
     rightMotor1.set(ControlMode.PercentOutput, motorPower);
-    /*double motorPower = controller.getRawAxis(1);
+    
+    /*
+    double motorPower = controller.getRawAxis(1);
     System.out.println(motorPower);
     leftMotor1.set(ControlMode.PercentOutput, motorPower);
-    rightMotor1.set(ControlMode.PercentOutput, motorPower);*/
-    
+    rightMotor1.set(ControlMode.PercentOutput, motorPower*0.0);
+    */
   }
 
   /**
