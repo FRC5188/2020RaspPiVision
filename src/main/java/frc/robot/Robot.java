@@ -7,17 +7,12 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-
-import java.util.List;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -69,9 +64,8 @@ public class Robot extends TimedRobot {
     leftMotor2 = new TalonSRX(1);
     rightMotor1 = new TalonSRX(2);
     rightMotor2 = new VictorSPX(3);
-    //leftMotor2.follow(leftMotor1);
+    leftMotor2.follow(leftMotor1);
     rightMotor2.follow(rightMotor1);
-    controller = new XboxController(0);
   }
 
   /**
